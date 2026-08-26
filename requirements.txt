@@ -1,0 +1,17 @@
+# Core AI and Vision
+torch
+torchvision
+transformers>=4.49.0
+accelerate
+safetensors
+pillow
+numpy
+opencv-python
+tqdm
+
+# Video Decoding (Crucial for the errors you saw)
+av
+decord
+
+# Hardware Acceleration
+# Note: PyTorch CUDA versions are usually installed via a specific index URL
