@@ -1,6 +1,8 @@
 import json
 import re
 import torch
+import av
+import numpy as np
 from transformers import AutoProcessor, AutoModelForImageTextToText
 
 
@@ -29,12 +31,39 @@ class SmolVLM:
         self.model.eval()
         print("Model loaded.")
 
+    def _load_video_frames(self, video_path: str, max_frames: int = 32):
+        """
+        Load video frames using av (PyAV) instead of torchcodec.
+        This avoids the torchcodec DLL error completely.
+        """
+        container = av.open(video_path)
+        stream = container.streams.video[0]
+
+        # Calculate frame sampling rate to get ~max_frames evenly distributed
+        total_frames = stream.frames
+        if total_frames > max_frames:
+            step = total_frames // max_frames
+        else:
+            step = 1
+
+        frames = []
+        for i, frame in enumerate(container.decode(video=0)):
+            if i % step == 0 and len(frames) < max_frames:
+                img = frame.to_ndarray(format="rgb24")
+                frames.append(img)
+
+        container.close()
+        return frames
+
     def analyze(self, video_path: str, prompt: str) -> str:
+        # Load video frames manually using av (PyAV)
+        video_frames = self._load_video_frames(video_path)
+
         messages = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "video", "path": video_path},
+                    {"type": "video", "frames": video_frames},
                     {"type": "text", "text": prompt},
                 ],
             }
