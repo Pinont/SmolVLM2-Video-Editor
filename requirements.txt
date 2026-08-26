@@ -9,9 +9,9 @@ numpy
 opencv-python
 tqdm
 
-# Video Decoding (Crucial for the errors you saw)
+# Video Decoding (Required for the model.py fix)
 av
-decord
 
 # Hardware Acceleration
-# Note: PyTorch CUDA versions are usually installed via a specific index URL
+# Note: PyTorch CUDA versions must be installed via a specific index URL:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
