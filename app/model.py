@@ -97,6 +97,47 @@ class SmolVLM:
             skip_special_tokens=True,
         )[0].strip()
 
+    def generate_text(
+        self,
+        system: str,
+        user: str,
+        max_new_tokens: int | None = None,
+    ) -> str:
+        """Text-only chat completion. Used by Stage 2 (derive highlight
+        types) where there's no video to attach.
+        """
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": system}]},
+            {"role": "user", "content": [{"type": "text", "text": user}]},
+        ]
+
+        inputs = self.processor.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_dict=True,
+            return_tensors="pt",
+        )
+        inputs = {
+            k: (v.to(self.device) if hasattr(v, "to") else v)
+            for k, v in inputs.items()
+        }
+
+        with torch.inference_mode():
+            output_ids = self.model.generate(
+                **inputs,
+                do_sample=True,
+                temperature=0.7,
+                max_new_tokens=max_new_tokens or self.max_new_tokens,
+            )
+
+        input_len = inputs["input_ids"].shape[-1]
+        generated = output_ids[:, input_len:]
+        return self.processor.batch_decode(
+            generated,
+            skip_special_tokens=True,
+        )[0].strip()
+
     @staticmethod
     def parse_json(text: str) -> dict | None:
         text = text.strip()
