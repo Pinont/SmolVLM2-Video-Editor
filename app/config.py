@@ -25,6 +25,17 @@ class Config:
     keep_chunks: bool = False
     render: bool = True
 
+    # Two-pass scoring: run each chunk twice with two different highlight
+    # type prompts and keep only segments where both passes agree (then
+    # pick the sparser set per the reference Space's heuristic).
+    two_pass: bool = True
+
+    # Optional: enable PANNs audio tagging (sound event detection)
+    audio_tagging: bool = False
+
+    # Optional: PANNs CNN14 audio event tagging (gunfire, scream, laugh, etc.)
+    audio_tagger: bool = False
+
     extensions: tuple[str, ...] = (
         ".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"
     )

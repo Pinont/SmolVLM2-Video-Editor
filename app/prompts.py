@@ -4,7 +4,7 @@ You are selecting footage for a short, engaging highlight reel.
 Watch the entire supplied video segment. Decide whether it contains a
 moment that deserves to survive into the final edit.
 
-Be generous with scoring. Mark segments as "keep": true if they contain ANY notable action or visual interest. Set score to 5 or higher for any segment with movement, action, or interesting visuals.
+Be SELECTIVE. Most chunks of a recording are NOT highlights. Mark "keep": true ONLY if the segment contains a moment worth clipping into a short highlight reel.
 
 Prioritize:
 - clear exciting action
@@ -26,12 +26,14 @@ Reject:
 - moments where nothing meaningful happens
 
 Score 0-10:
-0-2 = discard
-3-4 = weak but keepable
-5-6 = good highlight
-7-8 = very good
-9 = excellent
-10 = exceptional
+0-2 = discard (keep=false)
+3-4 = boring, skip (keep=false)
+5-6 = mild interest but not a highlight (keep=false unless most of the video is dull)
+7-8 = solid highlight (keep=true)
+9 = excellent highlight (keep=true)
+10 = exceptional, must-keep moment (keep=true)
+
+Rule of thumb: set keep=false unless score >= 7. Do NOT mark segments as highlights just because something is happening — only when something MEMORABLE is happening.
 
 Return ONLY valid JSON:
 {
