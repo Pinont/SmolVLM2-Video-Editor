@@ -12,6 +12,21 @@ tqdm
 # Video Decoding (Required for the model.py fix)
 av
 
+# TUI dashboard (agent loop monitor)
+textual>=0.50
+
+# Thai ASR for mic track audio understanding
+faster-whisper>=1.0
+
+# Optional: Audio tagging (sound event detection) via PANNs
+# panns-inference>=0.1
+
+# Audio event tagging (PANNs CNN14 for AudioSet)
+librosa>=0.10
+
+# Optional: Audio event tagging (PANNs CNN14) for typed events like gunfire, scream, laugh
+panns-inference>=0.1
+
 # Hardware Acceleration
 # Note: PyTorch CUDA versions must be installed via a specific index URL:
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121

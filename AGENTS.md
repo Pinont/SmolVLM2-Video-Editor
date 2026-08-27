@@ -27,30 +27,53 @@ The `smolvlm_auto_highlighter` is a vision-based pipeline designed to automatica
 **`app/ffmpeg.py`** — Video processing utilities
 - `duration()`: Gets video length via ffprobe
 - `make_chunk()`: Cuts video into segments using FFmpeg
-- `render_clip()`: Re-encodes clips for final output
-- `concat_files()`: Concatenates clips into final highlight reel
+- `render_clip()`: Re-encodes clips for final output (mixes all audio tracks via `amix`)
+- `concat_files()`: Concatenates pre-rendered clips
+- `concat_scenes()`: **Single-pass** concat via FFmpeg `filter_complex` (preserves all audio tracks, much faster)
 
 **`app/model.py`** — VLM wrapper ⚠️ **CRITICAL FILE**
 - Loads `SmolVLM2-2.2B-Instruct` from Hugging Face
 - Uses `PyAV` (not `torchcodec`) for video frame extraction
 - The `_load_video_frames()` method bypasses torchcodec DLL requirements
 - Handles JSON parsing of model outputs
+- `generate_text()` for text-only chat (used by Stage 2)
 
 **`app/pipeline.py`** — Orchestrator
 - `discover_videos()`: Finds videos in input folder
 - `segment_ranges()`: Calculates chunk boundaries with overlap
-- `analyze_one()`: Processes a single video
-- `run()`: Main execution loop
+- `analyze_one()`: Processes a single video (now runs Stage 1/2 + two-pass Stage 3)
+- `run()`: Main execution loop, reconciles two passes and calls `concat_scenes`
 
 **`app/selector.py`** — Filtering logic
 - `Candidate` dataclass: Holds segment metadata
-- `select_candidates()`: Filters by score, overlap, and target duration
+- `merge_overlapping()`: Collapses adjacent sequential chunks (20% threshold)
+- `select_candidates()`: Filters by score + round-robin per-file + chronological output
 - `expand_candidate()`: Adds context (before/after) to selected clips
 
+**`app/stages.py`** — Pre-analysis stages (NEW)
+- `describe_video()`: Stage 1 — full-video free-form description
+- `derive_highlight_types()`: Stage 2 — list archetypal highlight types from description
+- `ensure_meta()`: Caches per-video meta so re-runs don't re-describe
+- `chunk_scoring_prompt()`: Stage 3 — per-chunk prompt using cached highlight types
+
+**`app/critic.py`** — Deterministic feedback (NEW)
+- `review()`: Runs 8 cheap checks (audio_present, tracks_preserved, sequential_clips, etc.)
+- Returns `CriticReport` with `issues`, `axes`, `knob_hints`, `score`
+- `apply_knob_hints()`: Adjusts Config within safe bounds
+
+**`app/agent.py`** — Iterative refine loop (NEW)
+- Runs Pipeline → Critic → tunes Config → repeats
+- Capped by `max_iterations`, `wall_clock_minutes`, or `patience` rounds of no improvement
+- Persists each iteration under `output/iterations/<NNN>/` and `output/state.json`
+
+**`app/tui.py`** — Textual dashboard (NEW)
+- Multi-pane: Queue | Current chunk | Knobs | Scores-over-iters | Live log
+- Bindings: `s` start, `p` pause, `r` re-run, `d` deep review, `q` quit
+- Run with: `python -m app.tui`
+
 **`app/prompts.py`** — VLM instructions
-- Contains `HIGHLIGHT_PROMPT` sent to the model
-- Defines scoring rubric (0-10 scale)
-- Specifies JSON output format
+- Kept for backwards compatibility (single-pass mode), but Stage 3 uses `app/stages.py::chunk_scoring_prompt` instead
+- Defines the original "be generous" rubric — replaced by stricter rubric in `stages.py`
 
 ## ⚠️ CRITICAL ENVIRONMENT NOTES
 
